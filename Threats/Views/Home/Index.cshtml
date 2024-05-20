@@ -1,0 +1,45 @@
+﻿@page
+@model IEnumerable<string>
+
+<form id="generateProcessForm" asp-action="GenerateProcess" method="post">
+    <button type="submit" id="generateButton">Generate Process</button>
+</form>
+
+<h2>Process Log</h2>
+<ul id="messagesList"></ul>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/processHub")
+        .build();
+
+    connection.on("ReceiveMessage", function (message) {
+        console.log("Message received: " + message); // Mensaje de depuración
+        const li = document.createElement("li");
+        li.textContent = message;
+        document.getElementById("messagesList").appendChild(li);
+    });
+
+    connection.start().then(function () {
+        console.log("SignalR connected."); // Mensaje de depuración
+        document.getElementById("generateButton").disabled = false; // Habilitar el botón cuando la conexión esté lista
+    }).catch(function (err) {
+        console.error("SignalR connection error: " + err.toString()); // Mensaje de depuración
+    });
+
+    $("#generateProcessForm").submit(function (event) {
+        event.preventDefault(); // Evitar la recarga de la página
+        $.ajax({
+            type: "POST",
+            url: $(this).attr('action'),
+            success: function (data) {
+                console.log("Process generation requested."); // Mensaje de depuración
+            },
+            error: function (err) {
+                console.error("Error in process generation: " + err.toString()); // Mensaje de depuración
+            }
+        });
+    });
+</script>
